@@ -1,9 +1,9 @@
-export default class GetCuentaById {
+export default class GetCuenta {
   constructor(cuentaRepository) {
     this.cuentaRepository = cuentaRepository;
   }
 
-  async execute(id) {
-    return await this.cuentaRepository.getById(id);
+  async execute() {
+    return await this.cuentaRepository.getAll();
   }
 }

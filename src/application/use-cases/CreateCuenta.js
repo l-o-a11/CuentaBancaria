@@ -20,8 +20,8 @@ export default class CreateCuenta {
     }
 }
 
-// "nroCuenta": "001",
-//     "nombreCliente": "Juan Pérez",
-//     "saldo": 1200
+//  "nroCuenta": 402, 
+// "nombreCliente": "Juan Pérez", 
+// "saldo": 100 
 // http://localhost:3000/api/cuentas
 
