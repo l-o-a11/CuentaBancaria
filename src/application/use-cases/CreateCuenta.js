@@ -1,20 +1,27 @@
-export default class CreateCuenta{
-    constructor(CuentaRepository){
-        this.CuentaRepository = CuentaRepository;
+export default class CreateCuenta {
+    constructor(cuentaRepository) {
+        this.cuentaRepository = cuentaRepository;
     }
 
-   async execute(cuentaData){
-    if(!CuentaData.nroCuenta) throw new Error("El numero de cuenta es requerido")
-    if(!CuentaData.nombreCliente) throw new Error("El nombre del cliente es requerido")
-    if(!CuentaData.saldo) throw new Error("El saldo de la cuenta es requerido")
-    
+    async execute(cuentaData) {
+        if (!cuentaData.nroCuenta) throw new Error("El número de cuenta es requerido");
+        if (!cuentaData.nombreCliente) throw new Error("El nombre del cliente es requerido");
+        if (cuentaData.saldo === undefined || cuentaData.saldo === null) {
+            throw new Error("El saldo de la cuenta es requerido");
+        }
 
-   const toSave = {
-    nroCuenta: cuentaData.nroCuenta,
-    nombreCliente: cuentaData.nombreCliente,
-    saldo: cuentaData.saldo
+        const toSave = {
+            nroCuenta: cuentaData.nroCuenta,
+            nombreCliente: cuentaData.nombreCliente,
+            saldo: cuentaData.saldo
+        };
 
-   };
-   return await this.CuentaRepository.create(toSave);
+        return await this.cuentaRepository.create(toSave);
+    }
 }
-}
+
+// "nroCuenta": "001",
+//     "nombreCliente": "Juan Pérez",
+//     "saldo": 1200
+// http://localhost:3000/api/cuentas
+
