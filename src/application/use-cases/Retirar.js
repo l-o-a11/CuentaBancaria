@@ -1,31 +1,34 @@
-import express from "express";
-const router = express.Router();
+import { aCentavos } from "../../domain/dinero.js";
+import { ErrorSaldoInsuficiente } from "../../domain/errores.js";
+import { TipoMovimiento } from "../../domain/tiposMovimiento.js";
+import { exigirCuentaActiva } from "../errores-operacion.js";
+import { validarDescripcion } from "../validaciones.js";
 
-router.put("/cuentas/:id/retirar", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { monto } = req.body;
+export default class Retirar {
+  constructor({ cuentaRepository, movimientoRepository }) {
+    this.cuentaRepository = cuentaRepository;
+    this.movimientoRepository = movimientoRepository;
+  }
 
-        if (!monto || monto <= 0) {
-            return res.status(400).json({ error: "El monto debe ser mayor a 0" });
-        }
+  async ejecutar(id, datos = {}) {
+    const monto = aCentavos(datos.monto, { campo: "monto" });
+    const descripcion = validarDescripcion(datos.descripcion);
 
-        const cuenta = await CuentaRepository.findById(id);
-        if (!cuenta) {
-            return res.status(404).json({ error: "Cuenta no encontrada" });
-        }
-
-        if (cuenta.saldo < monto) {
-            return res.status(400).json({ error: "Saldo insuficiente" });
-        }
-
-        cuenta.saldo -= monto;
-        const updated = await CuentaRepository.update(id, cuenta);
-
-        res.json({ message: "Retiro exitoso", cuenta: updated });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    // La condición "saldo >= monto" se evalúa dentro de la misma operación atómica
+    // que descuenta, así que dos retiros simultáneos no pueden dejar la cuenta en negativo.
+    const cuenta = await this.cuentaRepository.debitar(id, monto);
+    if (!cuenta) {
+      await exigirCuentaActiva(this.cuentaRepository, id);
+      throw new ErrorSaldoInsuficiente();
     }
-});
 
-export default router;
+    const movimiento = await this.movimientoRepository.registrar({
+      cuentaId: cuenta.id,
+      tipo: TipoMovimiento.RETIRO,
+      monto,
+      saldoResultante: cuenta.saldo,
+      descripcion,
+    });
+    return { cuenta, movimiento };
+  }
+}

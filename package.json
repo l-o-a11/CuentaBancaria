@@ -1,18 +1,24 @@
 {
-  "name": "cuenta",
-  "version": "1.0.0",
+  "name": "cuenta-bancaria",
+  "version": "2.0.0",
+  "description": "API REST de cuentas bancarias con consignaciones, retiros e historial de movimientos",
   "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "main": "src/app.js",
+  "engines": {
+    "node": ">=20"
   },
-  "author": "",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "test": "node --test test/*.test.js"
+  },
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
     "mongoose": "^8.18.1"
   }
 }

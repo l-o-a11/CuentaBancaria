@@ -1,15 +1,32 @@
-import express from "express";
 import cors from "cors";
+import express from "express";
+import { rateLimit } from "express-rate-limit";
+import helmet from "helmet";
 
-import CuentaRoutes from "../infrastructure/routes/CuentaRoutes.js";
+import { crearCuentaController } from "../infrastructure/http/controllers/cuentaController.js";
+import { manejadorErrores, rutaNoEncontrada } from "../infrastructure/http/middlewares/manejadorErrores.js";
+import { crearRutasCuenta } from "../infrastructure/http/routes/cuentaRoutes.js";
 
-const app = express();
+/**
+ * Construye la aplicación Express a partir de los casos de uso.
+ * No sabe nada de Mongo ni del puerto: así se puede probar sin base de datos.
+ */
+export function crearServidor({ casosDeUso, corsOrigen = ["*"], limitarSolicitudes = true }) {
+  const app = express();
 
-app.use(cors());
-app.use(express.json());
+  app.disable("x-powered-by");
+  app.use(helmet());
+  app.use(cors({ origin: corsOrigen.includes("*") ? "*" : corsOrigen }));
+  app.use(express.json({ limit: "10kb" }));
 
-app.use("/api/cuenta", CuentaRoutes);
+  if (limitarSolicitudes) {
+    app.use(rateLimit({ windowMs: 60_000, limit: 100, standardHeaders: "draft-7", legacyHeaders: false }));
+  }
 
-app.get("/", (req, res) => res.send("API Cuenta Bancaria - OK"));
+  app.get("/salud", (_req, res) => res.json({ estado: "ok" }));
+  app.use("/api/cuentas", crearRutasCuenta(crearCuentaController(casosDeUso)));
 
-export default app;
+  app.use(rutaNoEncontrada);
+  app.use(manejadorErrores);
+  return app;
+}
